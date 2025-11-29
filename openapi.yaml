@@ -26,6 +26,7 @@ paths:
     /users/{id}:
         get:
             summary: Get user by ID
+            description: Returns user information without password
             tags:
                 - Users
             parameters:
@@ -34,15 +35,24 @@ paths:
                   required: true
                   schema:
                       type: integer
+                  example: 1
             responses:
                 "200":
-                    description: User details
+                    description: User details (password excluded)
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/User"
+                                $ref: "#/components/schemas/UserWithoutPassword"
                 "404":
                     description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "User not found"
 
     /login:
         post:
@@ -74,34 +84,63 @@ paths:
                                 properties:
                                     token:
                                         type: string
+                                        example: "token_1_1764433701498"
                                     user:
-                                        $ref: "#/components/schemas/User"
+                                        $ref: "#/components/schemas/UserWithoutPassword"
+                "400":
+                    description: Missing required fields
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "Email and password are required"
                 "401":
                     description: Invalid credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "Invalid email or password"
 
     /appointments:
         get:
-            summary: Get all appointments
+            summary: Get appointments with populated user data
+            description: Returns appointments where the user is either patient or doctor, with full user information populated
             tags:
                 - Appointments
             parameters:
-                - name: patientId
+                - name: userId
                   in: query
+                  required: true
                   schema:
                       type: integer
-                - name: doctorId
-                  in: query
-                  schema:
-                      type: integer
+                  description: User ID to filter appointments (returns appointments where user is patient or doctor)
+                  example: 2
             responses:
                 "200":
-                    description: List of appointments
+                    description: List of appointments with populated doctor and patient data
                     content:
                         application/json:
                             schema:
                                 type: array
                                 items:
-                                    $ref: "#/components/schemas/Appointment"
+                                    $ref: "#/components/schemas/AppointmentWithUsers"
+                "400":
+                    description: Missing or invalid userId parameter
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "userId query parameter is required"
         post:
             summary: Create new appointment
             tags:
@@ -235,5 +274,65 @@ components:
                     example: "Cleaning"
                 status:
                     type: string
-                    enum: [pending, confirmed, completed, cancelled]
-                    example: "confirmed"
+                    enum: [pending, scheduled, completed, cancelled]
+                    example: "scheduled"
+
+        UserWithoutPassword:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                email:
+                    type: string
+                    format: email
+                    example: "doctor@dentalcare.com"
+                role:
+                    type: string
+                    enum: [doctor, patient]
+                    example: "doctor"
+                name:
+                    type: string
+                    example: "Dr. Sarah Johnson"
+                phone:
+                    type: string
+                    example: "+1-555-0123"
+                    description: "Only for patients"
+                dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1985-03-15"
+                    description: "Only for patients"
+                address:
+                    type: string
+                    example: "123 Main St, City, State 12345"
+                    description: "Only for patients"
+
+        AppointmentWithUsers:
+            allOf:
+                - $ref: "#/components/schemas/Appointment"
+                - type: object
+                  properties:
+                      doctor:
+                          allOf:
+                              - $ref: "#/components/schemas/UserWithoutPassword"
+                              - type: object
+                                description: "Doctor information (password excluded)"
+                                example:
+                                    id: 1
+                                    email: "doctor@dentalcare.com"
+                                    role: "doctor"
+                                    name: "Dr. Jane Smith"
+                      patient:
+                          allOf:
+                              - $ref: "#/components/schemas/UserWithoutPassword"
+                              - type: object
+                                description: "Patient information (password excluded)"
+                                example:
+                                    id: 2
+                                    email: "bob.doe@email.com"
+                                    role: "patient"
+                                    name: "Bob Doe"
+                                    phone: "+3712000001"
+                                    dateOfBirth: "1985-03-15"
+                                    address: "Lielā iela 12, Riga"

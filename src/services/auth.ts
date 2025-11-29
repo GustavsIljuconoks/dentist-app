@@ -1,7 +1,5 @@
+import { API_BASE_URL } from "@/lib/constants";
 import type { User } from "@/types/User";
-
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 export interface LoginResponse {
     token: string;
@@ -68,6 +66,34 @@ class AuthService {
         this.currentUser = null;
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+    }
+
+    async getUser(userId: number): Promise<User | null> {
+        // Simulate network latency
+        const delay = Math.max(500, Math.random() * 1000 + 500);
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return null; // User not found
+                }
+                throw new Error(`Failed to fetch user: ${response.statusText}`);
+            }
+
+            const user = await response.json();
+            return user as User;
+        } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+            return null;
+        }
     }
 
     getCurrentUser(): User | null {
