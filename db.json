@@ -1,0 +1,51 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "email": "doctor@dentalcare.com",
+            "password": "doctor123",
+            "role": "doctor",
+            "name": "Dr. Jane Smith"
+        },
+        {
+            "id": 2,
+            "email": "bob.doe@email.com",
+            "password": "patient123",
+            "role": "patient",
+            "name": "Bob Doe",
+            "phone": "+3712000001",
+            "dateOfBirth": "1985-03-15",
+            "address": "Lielā iela 12, Riga"
+        },
+        {
+            "id": 3,
+            "email": "alex.smith@email.com",
+            "password": "patient123",
+            "role": "patient",
+            "name": "Alex Smith",
+            "phone": "+3712000002",
+            "dateOfBirth": "1992-07-22",
+            "address": "456 Ozolu iela, Riga"
+        }
+    ],
+    "appointments": [
+        {
+            "id": 1,
+            "patientId": 2,
+            "doctorId": 1,
+            "date": "2025-12-05",
+            "time": "10:00",
+            "type": "Cleaning",
+            "status": "confirmed"
+        },
+        {
+            "id": 2,
+            "patientId": 3,
+            "doctorId": 1,
+            "date": "2025-12-06",
+            "time": "14:30",
+            "type": "Check-up",
+            "status": "pending"
+        }
+    ]
+}

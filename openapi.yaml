@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+    title: Dentist Appointment App API
+    description: Mock API for a dentist appointment management system
+    version: 1.0.0
+servers:
+    - url: http://localhost:3001
+      description: Local json-server instance
+
+paths:
+    /users:
+        get:
+            summary: Get all users
+            tags:
+                - Users
+            responses:
+                "200":
+                    description: List of users
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User"
+
+    /users/{id}:
+        get:
+            summary: Get user by ID
+            tags:
+                - Users
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: User details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "404":
+                    description: User not found
+
+    /login:
+        post:
+            summary: User login
+            tags:
+                - Authentication
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - password
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                password:
+                                    type: string
+            responses:
+                "200":
+                    description: Login successful
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    token:
+                                        type: string
+                                    user:
+                                        $ref: "#/components/schemas/User"
+                "401":
+                    description: Invalid credentials
+
+    /appointments:
+        get:
+            summary: Get all appointments
+            tags:
+                - Appointments
+            parameters:
+                - name: patientId
+                  in: query
+                  schema:
+                      type: integer
+                - name: doctorId
+                  in: query
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: List of appointments
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Appointment"
+        post:
+            summary: Create new appointment
+            tags:
+                - Appointments
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Appointment"
+            responses:
+                "201":
+                    description: Appointment created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Appointment"
+
+    /appointments/{id}:
+        get:
+            summary: Get appointment by ID
+            tags:
+                - Appointments
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: Appointment details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Appointment"
+        put:
+            summary: Update appointment
+            tags:
+                - Appointments
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: integer
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Appointment"
+            responses:
+                "200":
+                    description: Appointment updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Appointment"
+        delete:
+            summary: Delete appointment
+            tags:
+                - Appointments
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "204":
+                    description: Appointment deleted
+
+components:
+    schemas:
+        User:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                email:
+                    type: string
+                    format: email
+                    example: "doctor@dentalcare.com"
+                password:
+                    type: string
+                    writeOnly: true
+                role:
+                    type: string
+                    enum: [doctor, patient]
+                    example: "doctor"
+                name:
+                    type: string
+                    example: "Dr. Sarah Johnson"
+                phone:
+                    type: string
+                    example: "+1-555-0123"
+                    description: "Only for patients"
+                dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1985-03-15"
+                    description: "Only for patients"
+                address:
+                    type: string
+                    example: "123 Main St, City, State 12345"
+                    description: "Only for patients"
+
+        Appointment:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                patientId:
+                    type: integer
+                    example: 2
+                doctorId:
+                    type: integer
+                    example: 1
+                date:
+                    type: string
+                    format: date
+                    example: "2025-12-05"
+                time:
+                    type: string
+                    example: "10:00"
+                type:
+                    type: string
+                    example: "Cleaning"
+                status:
+                    type: string
+                    enum: [pending, confirmed, completed, cancelled]
+                    example: "confirmed"

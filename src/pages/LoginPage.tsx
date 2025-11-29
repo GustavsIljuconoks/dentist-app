@@ -1,24 +1,46 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authService, type LoginCredentials } from "@/services/auth";
 
-export default function LoginPage() {
-    const handleSubmit = (e: React.FormEvent) => {
+interface LoginPageProps {
+    onLoginSuccess?: () => void;
+}
+
+export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const formData = new FormData(e.target as HTMLFormElement);
+        setIsLoading(true);
+        setError(null);
 
-        console.log("Login attempt:", {
-            email: formData.get("email"),
-            password: formData.get("password"),
-        });
+        const formData = new FormData(e.target as HTMLFormElement);
+        const credentials: LoginCredentials = {
+            email: formData.get("email") as string,
+            password: formData.get("password") as string,
+        };
+
+        try {
+            await authService.login(credentials);
+            onLoginSuccess?.();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Login failed");
+            setTimeout(() => {
+                setError(null);
+            }, 1000);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -35,6 +57,11 @@ export default function LoginPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {error && (
+                            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                                {error}
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label
@@ -71,13 +98,16 @@ export default function LoginPage() {
                                     className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 />
                             </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? "Signing in..." : "Login"}
+                            </Button>
                         </form>
                     </CardContent>
-                    <CardFooter className="flex-col gap-2">
-                        <Button type="submit" className="w-full">
-                            Login
-                        </Button>
-                    </CardFooter>
                 </Card>
             </div>
         </div>
