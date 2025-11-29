@@ -27,6 +27,10 @@ class AuthService {
     }
 
     async login(credentials: LoginCredentials): Promise<LoginResponse> {
+        // Simulate network latency (minimum 500ms)
+        const delay = Math.max(500, Math.random() * 1000 + 500);
+        await new Promise(resolve => setTimeout(resolve, delay));
+
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: "POST",
             headers: {
@@ -36,8 +40,16 @@ class AuthService {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Login failed");
+            let errorMessage = "Login failed";
+
+            try {
+                const error = await response.json();
+                errorMessage = error.error || errorMessage;
+            } catch {
+                errorMessage = "Network error. Please check your connection.";
+            }
+
+            throw new Error(errorMessage);
         }
 
         const loginResponse: LoginResponse = await response.json();
