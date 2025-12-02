@@ -118,6 +118,23 @@ server.post("/appointments/check-conflict", (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
+    const appointmentDate = new Date(date);
+
+    // validate business hours (9:00 - 15:00)
+    const hours = appointmentDate.getHours();
+    const minutes = appointmentDate.getMinutes();
+    const time = hours * 60 + minutes; // in minutes since midnight
+
+    if (time < 9 * 60 || time >= 15 * 60) {
+        return res.status(400).json({ error: "Appointments are only available between 9:00 AM and 3:00 PM" });
+    }
+
+    // validate weekdays only
+    const dayOfWeek = appointmentDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return res.status(400).json({ error: "Appointments are only available Monday through Friday" });
+    }
+
     const db = router.db;
     const appointments = (db.get("appointments") as any).value();
     const appointmentTypes = (db.get("appointmentTypes") as any).value();

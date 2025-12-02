@@ -105,6 +105,24 @@ export function BookAppointmentDialog({
             return;
         }
 
+        // validate business hours
+        const [hours, minutes] = time.split(":");
+        const timeInMinutes = parseInt(hours) * 60 + parseInt(minutes);
+        const startTime = 9 * 60;
+        const endTime = 15 * 60;
+
+        if (timeInMinutes < startTime || timeInMinutes >= endTime) {
+            setError("Appointments are only available between 9:00 AM and 3:00 PM");
+            return;
+        }
+
+        // validate weekday
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            setError("Appointments are only available Monday through Friday");
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -151,10 +169,12 @@ export function BookAppointmentDialog({
                                 mode="single"
                                 selected={date}
                                 onSelect={setDate}
-                                disabled={date =>
-                                    date <
-                                    new Date(new Date().setHours(0, 0, 0, 0))
-                                }
+                                disabled={(date) => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const dayOfWeek = date.getDay();
+                                    return date < today || dayOfWeek === 0 || dayOfWeek === 6;
+                                }}
                                 className="rounded-md border"
                             />
                         </div>
@@ -165,6 +185,8 @@ export function BookAppointmentDialog({
                                 id="time-picker"
                                 value={time}
                                 onChange={e => setTime(e.target.value)}
+                                min="09:00"
+                                max="15:00"
                                 className="bg-background"
                             />
                         </div>
