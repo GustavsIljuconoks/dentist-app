@@ -10,9 +10,11 @@ import {
 import { authService } from "@/services/auth";
 import type { User } from "@/types/User";
 import AppointmentList from "@/components/appointments/appointment";
+import { BookAppointmentDialog } from "@/components/appointments/BookAppointmentDialog";
 
 export default function Dashboard() {
     const [user, setUser] = useState<User | null>(null);
+    const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
 
     useEffect(() => {
         setUser(authService.getCurrentUser());
@@ -129,20 +131,22 @@ export default function Dashboard() {
                                     <Button
                                         className="w-full"
                                         variant="outline"
+                                        onClick={() =>
+                                            setIsBookingDialogOpen(true)
+                                        }
                                     >
                                         Book Appointment
-                                    </Button>
-                                    <Button
-                                        className="w-full"
-                                        variant="outline"
-                                    >
-                                        View Medical History
                                     </Button>
                                 </>
                             )}
                         </CardContent>
                     </Card>
                 </div>
+
+                <BookAppointmentDialog
+                    open={isBookingDialogOpen}
+                    onOpenChange={setIsBookingDialogOpen}
+                />
             </div>
         </div>
     );

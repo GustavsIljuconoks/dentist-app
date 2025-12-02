@@ -20,6 +20,26 @@ export default function AppointmentList() {
     );
     const currentUser = authService.getCurrentUser();
 
+    const formatDateTime = (dateString: string, timeString?: string) => {
+        const date = new Date(dateString);
+        const formattedDate = date.toLocaleDateString("lv-LV", {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+        });
+
+        if (timeString) {
+            return { date: formattedDate, time: timeString };
+        }
+
+        // Otherwise extract time from ISO date
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
+        return { date: formattedDate, time: formattedTime };
+    };
+
     useEffect(() => {
         loadAppointments();
     }, []);
@@ -214,10 +234,10 @@ export default function AppointmentList() {
                                 </div>
                             )}
 
-                            {appointment.type && (
+                            {appointment.typeName && (
                                 <div className="flex items-center gap-2 text-gray-700">
                                     <span className="font-medium">Type:</span>
-                                    <span>{appointment.type}</span>
+                                    <span>{appointment.typeName}</span>
                                 </div>
                             )}
 
@@ -253,8 +273,13 @@ export default function AppointmentList() {
 
                                         <div>
                                             <p className="text-gray-900">
-                                                {appointment.date} •{" "}
-                                                {appointment.time}
+                                                {(() => {
+                                                    const { date, time } =
+                                                        formatDateTime(
+                                                            appointment.date,
+                                                        );
+                                                    return `${date} • ${time}`;
+                                                })()}
                                             </p>
                                         </div>
                                     </div>

@@ -3,6 +3,8 @@ import swaggerUi from "swagger-ui-express";
 import { readFileSync } from "fs";
 import { load } from "js-yaml";
 import type { User } from "./src/types/User";
+import type { Appointment } from "./src/types/Appointment";
+import type { AppointmentType } from "./src/types/AppointmentType";
 
 export interface UserCredentials extends User {
     email: string;
@@ -50,6 +52,7 @@ server.get("/appointments", (req, res) => {
     const db = router.db;
     const appointments = db.get("appointments") as any;
     const users = db.get("users") as any;
+    const appointmentTypes = db.get("appointmentTypes") as any;
 
     // Filter appointments where user is either patient or doctor
     const userAppointments = appointments
@@ -65,37 +68,93 @@ server.get("/appointments", (req, res) => {
             const patient = users
                 .find((u: any) => u.id === appointment.patientId)
                 .value();
+            const appointmentType = appointmentTypes
+                .find((t: any) => t.id === appointment.type)
+                .value();
 
             const doctorData = doctor
                 ? {
-                      id: doctor.id,
-                      name: doctor.name,
-                      email: doctor.email,
-                      role: doctor.role,
-                  }
+                    id: doctor.id,
+                    name: doctor.name,
+                    email: doctor.email,
+                    role: doctor.role,
+                }
                 : null;
 
             const patientData = patient
                 ? {
-                      id: patient.id,
-                      name: patient.name,
-                      email: patient.email,
-                      role: patient.role,
-                      phone: patient.phone,
-                      dateOfBirth: patient.dateOfBirth,
-                      address: patient.address,
-                  }
+                    id: patient.id,
+                    name: patient.name,
+                    email: patient.email,
+                    role: patient.role,
+                    phone: patient.phone,
+                    dateOfBirth: patient.dateOfBirth,
+                    address: patient.address,
+                }
                 : null;
 
             return {
                 ...appointment,
                 doctor: doctorData,
                 patient: patientData,
+                typeName: appointmentType ? appointmentType.name : null,
             };
         })
         .value();
 
     res.json(userAppointments);
+});
+
+server.get("/types", (req, res) => {
+    const db = router.db;
+    const types = db.get("appointmentTypes") as any;
+    res.json(types);
+});
+
+server.post("/appointments/check-conflict", (req, res) => {
+    const { doctorId, date, typeId } = req.body;
+
+    if (!doctorId || !date || !typeId) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const db = router.db;
+    const appointments = (db.get("appointments") as any).value();
+    const appointmentTypes = (db.get("appointmentTypes") as any).value();
+
+    const newAppointmentType = appointmentTypes.find((t: any) => t.id === typeId);
+    if (!newAppointmentType) {
+        return res.status(400).json({ error: "Invalid appointment type" });
+    }
+
+    const newStart = new Date(date);
+    const newEnd = new Date(newStart.getTime() + newAppointmentType.durationMinutes * 60000);
+
+    // Check for conflicts with existing appointments for the same doctor
+    const conflicts = appointments.filter((apt: Appointment) => {
+        if (apt.doctorId !== doctorId || apt.status === "cancelled") {
+            return false;
+        }
+
+        const existingType = appointmentTypes.find((t: AppointmentType) => t.id === apt.type);
+        const existingStart = new Date(apt.date);
+        const existingEnd = new Date(existingStart.getTime() + (existingType?.durationMinutes || 30) * 60000);
+
+        // Check if times overlap
+        return (newStart < existingEnd && newEnd > existingStart);
+    });
+
+    if (conflicts.length > 0) {
+        return res.status(409).json({
+            error: "Time slot not available",
+            conflicts: conflicts.map((c: any) => ({
+                date: c.date,
+                type: c.type,
+            }))
+        });
+    }
+
+    res.json({ available: true });
 });
 
 server.get("/users/:id", (req, res) => {

@@ -3,7 +3,7 @@ export interface Appointment {
     patientId: number;
     doctorId: number;
     date: string;
-    time?: string;
-    type?: string;
+    type?: number;
+    typeName?: string; // populated from appointment types
     status?: "pending" | "scheduled" | "completed" | "cancelled";
 }

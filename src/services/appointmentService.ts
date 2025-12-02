@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "@/lib/constants";
 import { authService } from "./auth";
 import type { Appointment } from "@/types/Appointment";
+import type { AppointmentType } from "@/types/AppointmentType";
 
 class AppointmentService {
     // Simulate network latency (minimum 500ms)
@@ -21,6 +22,34 @@ class AppointmentService {
 
         if (!appointmentData.date) {
             throw new Error("Appointment date is required");
+        }
+
+        if (!appointmentData.type) {
+            throw new Error("Appointment type is required");
+        }
+
+        if (!appointmentData.doctorId) {
+            throw new Error("Doctor is required");
+        }
+
+        const conflictCheck = await fetch(`${API_BASE_URL}/appointments/check-conflict`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                doctorId: appointmentData.doctorId,
+                date: appointmentData.date,
+                typeId: appointmentData.type,
+            }),
+        });
+
+        if (!conflictCheck.ok) {
+            if (conflictCheck.status === 409) {
+                throw new Error("This time slot is not available. Please choose a different time.");
+            }
+            const error = await conflictCheck.json().catch(() => ({}));
+            throw new Error(error.error || "Failed to check availability");
         }
 
         const response = await fetch(`${API_BASE_URL}/appointments`, {
@@ -136,6 +165,53 @@ class AppointmentService {
         }
 
         return await response.json();
+    }
+
+    async getAppointmentTypes(): Promise<AppointmentType[]> {
+        await this.simulateLatency();
+
+        const response = await fetch(`${API_BASE_URL}/types`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch appointment types");
+        }
+
+        const types = await response.json();
+        return Array.isArray(types) ? types : [];
+    }
+
+    async checkAvailability(
+        doctorId: number,
+        date: string,
+        typeId: number,
+    ): Promise<{ available: boolean; error?: string }> {
+        const response = await fetch(`${API_BASE_URL}/appointments/check-conflict`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                doctorId,
+                date,
+                typeId,
+            }),
+        });
+
+        if (response.ok) {
+            return { available: true };
+        }
+
+        if (response.status === 409) {
+            const data = await response.json();
+            return { available: false, error: data.error };
+        }
+
+        return { available: false, error: "Failed to check availability" };
     }
 }
 
