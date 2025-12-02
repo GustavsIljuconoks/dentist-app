@@ -105,6 +105,21 @@ server.get("/appointments", (req, res) => {
     res.json(userAppointments);
 });
 
+server.delete("/appointments/:id", (req, res) => {
+    const id = Number(req.params.id);
+
+    const db = router.db;
+    const appointments = db.get("appointments") as any;
+
+    const appointment = appointments.find({ id }).value();
+    if (!appointment) {
+        return res.status(404).json({ error: "Appointment not found" });
+    }
+
+    appointments.remove({ id }).write();
+    res.status(204).end();
+});
+
 server.get("/types", (req, res) => {
     const db = router.db;
     const types = db.get("appointmentTypes") as any;
@@ -149,7 +164,7 @@ server.post("/appointments/check-conflict", (req, res) => {
 
     // Check for conflicts with existing appointments for the same doctor
     const conflicts = appointments.filter((apt: Appointment) => {
-        if (apt.doctorId !== doctorId || apt.status === "cancelled") {
+        if (apt.doctorId !== doctorId) {
             return false;
         }
 

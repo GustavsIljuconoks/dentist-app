@@ -123,9 +123,6 @@ class AppointmentService {
 
         const existingAppointment =
             await this.getAppointmentById(appointmentId);
-        if (existingAppointment.status === "cancelled") {
-            throw new Error("This appointment has already been cancelled");
-        }
         if (existingAppointment.status === "completed") {
             throw new Error("Cannot cancel a completed appointment");
         }
@@ -133,11 +130,10 @@ class AppointmentService {
         const response = await fetch(
             `${API_BASE_URL}/appointments/${appointmentId}`,
             {
-                method: "PATCH",
+                method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ status: "cancelled" }),
             },
         );
 

@@ -86,6 +86,21 @@ export default function AppointmentList() {
         loadAppointments();
     };
 
+    const handleAppointmentCancel = (appointmentId: number) => {
+        appointmentService
+            .cancelAppointment(appointmentId)
+            .then(() => {
+                loadAppointments();
+            })
+            .catch(err => {
+                const errorMessage =
+                    err instanceof Error
+                        ? err.message
+                        : "Failed to cancel appointment";
+                setError(errorMessage);
+            });
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center space-x-3">
@@ -133,91 +148,92 @@ export default function AppointmentList() {
                             key={appointment.id}
                             className="p-4 rounded-lg border border-gray-200 hover:border-gray-300 flex flex-col justify-start gap-2"
                         >
-                            <div className="flex items-center gap-3">
-                                <h3 className="text-lg font-medium text-gray-900">
-                                    Status:
-                                </h3>
-                                <span
-                                    className={`px-3 py-1 text-sm font-medium rounded-full ${
-                                        appointment.status === "scheduled"
-                                            ? "bg-green-100 text-green-800 border border-green-200"
-                                            : appointment.status === "pending"
-                                              ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                                              : appointment.status ===
-                                                  "completed"
-                                                ? "bg-blue-100 text-blue-800 border border-blue-200"
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex flex-row gap-2">
+                                    <h3 className="text-lg font-medium text-gray-900">
+                                        Status:
+                                    </h3>
+                                    <span
+                                        className={`px-3 py-1 text-sm font-medium rounded-full ${
+                                            appointment.status === "scheduled"
+                                                ? "bg-green-100 text-green-800 border border-green-200"
                                                 : appointment.status ===
-                                                    "cancelled"
-                                                  ? "bg-red-100 text-red-800 border border-red-200"
-                                                  : "bg-gray-100 text-gray-800 border border-gray-200"
-                                    }`}
-                                >
-                                    {appointment.status === "scheduled" && (
-                                        <div className="flex items-center gap-1">
-                                            <svg
-                                                className="w-3 h-3"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                            Scheduled
-                                        </div>
-                                    )}
-                                    {appointment.status === "pending" && (
-                                        <div className="flex items-center gap-1">
-                                            <svg
-                                                className="w-3 h-3"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                            Pending
-                                        </div>
-                                    )}
-                                    {appointment.status === "completed" && (
-                                        <div className="flex items-center gap-1">
-                                            <svg
-                                                className="w-3 h-3"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.259.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                            Completed
-                                        </div>
-                                    )}
-                                    {appointment.status === "cancelled" && (
-                                        <div className="flex items-center gap-1">
-                                            <svg
-                                                className="w-3 h-3"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                            Cancelled
-                                        </div>
-                                    )}
-                                    {!appointment.status && "Scheduled"}
-                                </span>
+                                                    "pending"
+                                                  ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                                  : appointment.status ===
+                                                      "completed"
+                                                    ? "bg-blue-100 text-blue-800 border border-blue-200"
+                                                    : appointment.status ===
+                                                        "cancelled"
+                                                      ? "bg-red-100 text-red-800 border border-red-200"
+                                                      : "bg-gray-100 text-gray-800 border border-gray-200"
+                                        }`}
+                                    >
+                                        {appointment.status === "scheduled" && (
+                                            <div className="flex items-center gap-1">
+                                                <svg
+                                                    className="w-3 h-3"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                                Scheduled
+                                            </div>
+                                        )}
+                                        {appointment.status === "pending" && (
+                                            <div className="flex items-center gap-1">
+                                                <svg
+                                                    className="w-3 h-3"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                                Pending
+                                            </div>
+                                        )}
+                                        {appointment.status === "completed" && (
+                                            <div className="flex items-center gap-1">
+                                                <svg
+                                                    className="w-3 h-3"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.259.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                                Completed
+                                            </div>
+                                        )}
+                                        {!appointment.status && "Scheduled"}
+                                    </span>
+                                </div>
+
+                                {(appointment.status === "scheduled" ||
+                                    appointment.status === "pending") && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            handleAppointmentCancel(
+                                                appointment.id,
+                                            )
+                                        }
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
                             </div>
 
                             {currentUser?.role === "patient" ? (

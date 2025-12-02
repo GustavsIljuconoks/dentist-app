@@ -5,5 +5,5 @@ export interface Appointment {
     date: string;
     type?: number;
     typeName?: string; // populated from appointment types
-    status?: "pending" | "scheduled" | "completed" | "cancelled";
+    status?: "pending" | "scheduled" | "completed";
 }
