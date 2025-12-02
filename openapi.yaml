@@ -150,7 +150,32 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/Appointment"
+                          type: object
+                          required:
+                            - patientId
+                            - doctorId
+                            - date
+                            - type
+                            - status
+                          properties:
+                            patientId:
+                              type: integer
+                              example: 2
+                            doctorId:
+                              type: integer
+                              example: 1
+                            date:
+                              type: string
+                              format: date-time
+                              example: "2025-12-05T12:00:00.000Z"
+                            type:
+                              type: string
+                              example: "Cleaning"
+                            status:
+                              type: string
+                              enum: [pending, scheduled, completed]
+                              example: "scheduled"
+
             responses:
                 "201":
                     description: Appointment created
@@ -177,29 +202,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/Appointment"
-        put:
-            summary: Update appointment
-            tags:
-                - Appointments
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                      type: integer
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/Appointment"
-            responses:
-                "200":
-                    description: Appointment updated
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/Appointment"
         delete:
             summary: Delete appointment
             tags:
@@ -213,6 +215,101 @@ paths:
             responses:
                 "204":
                     description: Appointment deleted
+                "404":
+                    description: Appointment not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "Appointment not found"
+
+    /appointments/check-conflict:
+        post:
+            summary: Check for appointment scheduling conflicts
+            description: Validates if a time slot is available, checks business hours (9AM-3PM), and ensures weekdays only
+            tags:
+                - Appointments
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - doctorId
+                                - date
+                                - typeId
+                            properties:
+                                doctorId:
+                                    type: integer
+                                    example: 1
+                                date:
+                                    type: string
+                                    format: date-time
+                                    example: "2025-12-05T10:00:00.000Z"
+                                typeId:
+                                    type: integer
+                                    example: 1
+            responses:
+                "200":
+                    description: Time slot is available
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    available:
+                                        type: boolean
+                                        example: true
+                "400":
+                    description: Invalid request or outside business hours/weekdays
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "Appointments are only available between 9:00 AM and 3:00 PM"
+                "409":
+                    description: Time slot conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: "Time slot not available"
+                                    conflicts:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                date:
+                                                    type: string
+                                                    format: date-time
+                                                type:
+                                                    type: integer
+
+    /types:
+        get:
+            summary: Get all appointment types
+            description: Returns list of available appointment types with durations
+            tags:
+                - Appointment Types
+            responses:
+                "200":
+                    description: List of appointment types
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/AppointmentType"
 
 components:
     schemas:
@@ -265,16 +362,13 @@ components:
                 date:
                     type: string
                     format: date
-                    example: "2025-12-05"
-                time:
-                    type: string
-                    example: "10:00"
+                    example: "2025-12-05T12:00:00.000Z"
                 type:
                     type: string
                     example: "Cleaning"
                 status:
                     type: string
-                    enum: [pending, scheduled, completed, cancelled]
+                    enum: [pending, scheduled, completed]
                     example: "scheduled"
 
         UserWithoutPassword:
@@ -336,3 +430,17 @@ components:
                                     phone: "+3712000001"
                                     dateOfBirth: "1985-03-15"
                                     address: "Lielā iela 12, Riga"
+
+        AppointmentType:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                name:
+                    type: string
+                    example: "Cleaning"
+                durationMinutes:
+                    type: integer
+                    example: 30
+                    description: "Duration of the appointment in minutes"
