@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# Dentist app
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repo showcases a demo app for dentist appointment dashboard. This dashboard includes separate doctor / patient views. Option to book and cancel appointments.
 
-Currently, two official plugins are available:
+## Technical Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+App uses React as the main source for powered with TS magic. As the project has an API side aswell it uses [OpenAPI](https://swagger.io/) for API documentation.
 
-## React Compiler
+## Getting started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-    globalIgnores(["dist"]),
-    {
-        files: ["**/*.{ts,tsx}"],
-        extends: [
-            // Other configs...
-
-            // Remove tseslint.configs.recommended and replace with this
-            tseslint.configs.recommendedTypeChecked,
-            // Alternatively, use this for stricter rules
-            tseslint.configs.strictTypeChecked,
-            // Optionally, add this for stylistic rules
-            tseslint.configs.stylisticTypeChecked,
-
-            // Other configs...
-        ],
-        languageOptions: {
-            parserOptions: {
-                project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-                tsconfigRootDir: import.meta.dirname,
-            },
-            // other options...
-        },
-    },
-]);
+```bash
+git clone git@github.com:GustavsIljuconoks/dentist-app.git project
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+#### Open your project directory
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-    globalIgnores(["dist"]),
-    {
-        files: ["**/*.{ts,tsx}"],
-        extends: [
-            // Other configs...
-            // Enable lint rules for React
-            reactX.configs["recommended-typescript"],
-            // Enable lint rules for React DOM
-            reactDom.configs.recommended,
-        ],
-        languageOptions: {
-            parserOptions: {
-                project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-                tsconfigRootDir: import.meta.dirname,
-            },
-            // other options...
-        },
-    },
-]);
+```bash
+cd project
 ```
+
+#### Install node dependencies
+
+```bash
+npm install
+```
+
+#### Run vite server
+
+```bash
+npm run dev
+```
+
+#### Run node server
+
+```bash
+npm run api
+```
+
+### Initial login details
+
+#### For doctor
+
+"email": "doctor@dentalcare.com",
+"password": "doctor123",
+
+#### For patient
+
+"email": "bob.doe@email.com",
+"password": "patient123",
+
+## Mock Data Service
+
+The project uses **json-server** as a mock REST API with custom middleware extensions:
+
+**Data Layer:**
+
+- `db.json` - flat-file database with 3 collections: `users`, `appointments`, and `appointmentTypes`
+- Contains seed data for 1 doctor and 2 patients, sample appointments, and 4 appointment types (Cleaning, Check-up, Filling, Root Canal)
+
+**Server Implementation (`server.ts`):**
+
+- Built on `json-server` with custom routes layered on top
+- Custom endpoints include:
+    - `GET /appointments?userId=X` - filters appointments by patient/doctor ID and enriches with nested user/type data
+    - `DELETE /appointments/:id` - cancels appointments
+    - `POST /appointments/check-conflict` - validates scheduling conflicts, business hours (9AM-3PM), and weekdays only
+    - `POST /login` - simple authentication (returns mock tokens)
+    - `GET /users/:id` - user lookup (strips passwords)
+    - `GET /types` - appointment types list
+
+**Documentation:**
+
+- OpenAPI spec (`openapi.yaml`) served via Swagger UI at `/api-docs`
+
+The architecture allows json-server to auto-generate basic CRUD while custom routes handle business logic like conflict checking and data enrichment.
